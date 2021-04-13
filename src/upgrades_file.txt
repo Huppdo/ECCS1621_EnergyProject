@@ -1,0 +1,21 @@
+Potential Insulation Upgrades:
+Update, additional r value, cost in dollars
+Increase attic insulation, 20, 1500
+Increase wall insulation, 8, 2100
+Curtain(all windows), 4, 300
+Upgrade windows (per window), 3, 500
+Plastic film insulation (all windows), 2, 15
+
+Potential Lightbulb Upgrades:
+Types of Bulbs (W), Wattage of LED, Cost of LED, Wattage of CFL, Cost of CFL
+150, 25, 10.00, 45, 11.00
+100, 20, 35.40, 30, 2.50
+75, 14, 4.00, 20, 10.00
+60, 8, 1.25, 15, 2.00
+40, 5, 2.00, 10, 6.00
+
+Miscellaneous Updates:
+Type, Cost per
+Programmable thermostat for baseboard heater, 30.00
+Motion Sensor for lights, 20.00
+Smart Plug, 16.00
