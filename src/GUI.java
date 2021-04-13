@@ -448,6 +448,7 @@ public class GUI {
 
                 upgradeDescriptionsAndCosts.setText(upgradeCosts.toString());
 
+
                 JOptionPane.showMessageDialog(null, "Recommended upgrades: " + upgrades);
             }
         });
