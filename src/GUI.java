@@ -26,7 +26,7 @@ public class GUI {
     private JTextField lightingHourTextField;
     private JTextField extWidthTextField;
     private JTextArea screen3MessageBox;
-    private JTextField extHeightTextField;
+    private JTextField extLengthTextField;
     private JTextField floorHeightTextField;
     private JTextField floorCountTextField;
     private JPanel screen4;
@@ -35,20 +35,271 @@ public class GUI {
     private JTextField windowHeightField;
     private JTextField windowCountField;
     private JButton nextTo5Button;
+    private JPanel screen5;
+    private JLabel calculations;
+    private JLabel lightingCost;
+    private JLabel lightingCostResult;
+    private JLabel heatingCost;
+    private JLabel heatingCostResult;
+    private JLabel miscellaneousCost;
+    private JLabel miscellaneousCostResult;
+    private JButton calculateCosts;
+    private JLabel totalCost;
+    private JLabel totalCostResult;
+    private JButton addAnotherWindow;
+    private JLabel optimizedLightingCost;
+    private JLabel optimizedLightingCostResult;
+    private JLabel optimizedHeatingCost;
+    private JLabel optimizedHeatingCostResult;
+    private JLabel optimizedMiscellaneousCost;
+    private JLabel optimizedMiscellaneousCostResult;
+    private JLabel totalOptimizedCost;
+    private JLabel totalOptimizedCostResult;
+    private JTextArea upgradeDescriptionsAndCosts;
+    private JLabel completeUpgradeCost;
+    private JLabel completeUpgradeCostResult;
 
     private static HashMap<String, Integer> heating;
     private static HashMap<Integer, Integer> lightingTypes;
     private static HashMap<Integer, Integer> lightingHours;
+    private static HashMap<String, Double> upgradeCosts;
 
     private static int lightingSlidePosition;
 
-    private static int extHeight;
+    private static int extLength;
     private static int extWidth;
     private static int floorHeight;
     private static int floorCount;
+    private static double atticArea;
 
     private static int windowSqin;
+    private static int windowSqft;
     private static int windowCount;
+
+    private static final double COST_PER_KILOWATT_HOUR = 0.1;
+    private static final double WATT_TO_BTU_PER_HR = 3.41;
+    private static final int DAYS_IN_USE = 365;
+    private static final double AVG_TEMP_APR_SEP = 63.3;
+    private static final double AVG_TEMP_OCT_MAR = 41.8;
+    private static final double HOUSE_TEMP_APR_SEP = 75;
+    private static final double HOUSE_TEMP_OCT_MAR = 68;
+    private static final double T_OUT_T_IN_APR_SEP = Math.abs(AVG_TEMP_APR_SEP - HOUSE_TEMP_APR_SEP);
+    private static final double T_OUT_T_IN_OCT_MAR = Math.abs(AVG_TEMP_OCT_MAR - HOUSE_TEMP_OCT_MAR);
+    private static final double WINDOW_R_VALUE = 3.5;
+    private static final double WALLS_R_VALUE = 13;
+    private static final double ATTIC_R_VALUE = 30;
+    private static final int ATTIC_HEIGHT = 7;
+
+    private static ArrayList<String> upgrades;
+
+
+    public static double baseLightingCost() {
+        int totalWattHours = 0;
+        int currentKey;
+        for(int i = 0; i < lightingTypes.size(); i++){
+            currentKey = (int) lightingTypes.keySet().toArray()[i];
+            totalWattHours += (currentKey * lightingTypes.get(currentKey) * lightingHours.get(currentKey));
+        }
+
+        double totalKWHours = (totalWattHours / 1000.0);
+        return totalKWHours * COST_PER_KILOWATT_HOUR * DAYS_IN_USE;
+    }
+
+    public static double optimizedLightingCost() {
+        double costs = 0.0;
+        boolean read = false;
+        int totalWattHours = 0;
+
+        File upgradesData = new File("src/upgrades_file.txt");
+        Scanner upgradesScanner;
+
+        try {
+            upgradesScanner = new Scanner(upgradesData);
+            while(upgradesScanner.hasNext()){
+                String inputStr = upgradesScanner.nextLine();
+
+                if(inputStr.isBlank()) { read = false; }
+
+                if(read) {
+                    String[] dataSplit = inputStr.split(", ");
+                    totalWattHours += lightingHours.get(Integer.parseInt(dataSplit[0])) * lightingTypes.get(Integer.parseInt(dataSplit[0])) * Integer.parseInt(dataSplit[1]);
+                    costs += Double.parseDouble(dataSplit[2]) * lightingTypes.get(Integer.parseInt(dataSplit[0]));
+                    upgrades.add("Upgrade to all LED bulbs");
+                }
+
+                if(inputStr.equals("Potential Lightbulb Upgrades:")) {
+                    read = true;
+                    upgradesScanner.nextLine();
+                }
+            }
+        } catch (FileNotFoundException e) {
+            JOptionPane.showMessageDialog(null, "Error loading upgrades_file.txt, exiting program.");
+            System.exit(-1);
+        }
+
+        upgradeCosts.put("Lighting Upgrade Costs", costs);
+
+
+        double totalKWHours = (totalWattHours / 1000.0);
+        return totalKWHours * COST_PER_KILOWATT_HOUR * DAYS_IN_USE;
+    }
+
+    public static double baseHeatingCost() {
+        atticArea = Math.sqrt(Math.pow((0.5 * extWidth), 2.0) + (ATTIC_HEIGHT * ATTIC_HEIGHT)) * extLength * 2.0;
+
+        double totalWattHours = 0;
+        int totalPower = 0;
+        double BTUPerHr = 0.0;
+        double heatTransferRateAprSep = 0.0;
+        double heatTransferRateOctMar = 0.0;
+        double heatLossPerYear = 0.0;
+        double hoursHeatersRun = 0.0;
+        double extCrossSectionalArea = (floorCount * floorHeight * extLength) + (floorCount * floorHeight * extWidth) - windowSqft;
+        String currentKey;
+
+        for(int i = 0; i < heating.size(); i++){
+            currentKey = heating.keySet().toArray()[i].toString();
+            totalPower += heating.get(currentKey);
+        }
+
+        heatTransferRateAprSep += extCrossSectionalArea * (T_OUT_T_IN_APR_SEP / WALLS_R_VALUE);
+        heatTransferRateAprSep += windowSqft * (T_OUT_T_IN_APR_SEP / WINDOW_R_VALUE);
+        heatTransferRateAprSep += atticArea * (T_OUT_T_IN_APR_SEP / ATTIC_R_VALUE);
+        heatTransferRateAprSep *= (DAYS_IN_USE / 2) * 24;
+
+        heatTransferRateOctMar += extCrossSectionalArea * (T_OUT_T_IN_OCT_MAR / WALLS_R_VALUE);
+        heatTransferRateOctMar += windowSqft * (T_OUT_T_IN_OCT_MAR / WINDOW_R_VALUE);
+        heatTransferRateOctMar += atticArea * (T_OUT_T_IN_OCT_MAR / ATTIC_R_VALUE);
+        heatTransferRateOctMar *= (DAYS_IN_USE / 2) * 24;
+
+        heatLossPerYear = heatTransferRateAprSep + heatTransferRateOctMar;
+
+        BTUPerHr = totalPower * WATT_TO_BTU_PER_HR;
+
+        hoursHeatersRun = (heatLossPerYear / BTUPerHr);
+
+        totalWattHours = hoursHeatersRun * totalPower;
+
+        return (totalWattHours / 1000) * COST_PER_KILOWATT_HOUR;
+    }
+
+    public static double optimizedHeatingCost() {
+        double costs = 0.0;
+        boolean read = false;
+        double optimizedWindowRValue = WINDOW_R_VALUE;
+        double optimizedWallRValue = WALLS_R_VALUE;
+        double optimizedAtticRValue = ATTIC_R_VALUE;
+
+        File upgradesData = new File("src/upgrades_file.txt");
+        Scanner upgradesScanner;
+
+        try {
+            upgradesScanner = new Scanner(upgradesData);
+            while(upgradesScanner.hasNext()){
+                String inputStr = upgradesScanner.nextLine();
+
+                if(inputStr.isBlank()) { read = false; }
+
+                if(read) {
+                    String[] dataSplit = inputStr.split(", ");
+                    if(inputStr.contains("per window")) {
+                        costs += Double.parseDouble(dataSplit[2]) * windowCount;
+                        optimizedWindowRValue += Double.parseDouble(dataSplit[1]) * windowCount;
+                    } else if(inputStr.contains("window")) {
+                        optimizedWindowRValue += Double.parseDouble(dataSplit[1]);
+                        costs += Double.parseDouble(dataSplit[2]);
+                    } else if(inputStr.contains("wall")) {
+                        optimizedWallRValue += Double.parseDouble(dataSplit[1]);
+                        costs += Double.parseDouble(dataSplit[2]);
+                    } else if(inputStr.contains("attic")) {
+                        optimizedAtticRValue += Double.parseDouble(dataSplit[1]);
+                        costs += Double.parseDouble(dataSplit[2]);
+                    }
+                    upgrades.add(dataSplit[0]);
+                }
+
+                if(inputStr.equals("Potential Insulation Upgrades:")) {
+                    read = true;
+                    upgradesScanner.nextLine();
+                }
+            }
+        } catch (FileNotFoundException e) {
+            JOptionPane.showMessageDialog(null, "Error loading upgrades_file.txt, exiting program.");
+            System.exit(-1);
+        }
+
+        upgradeCosts.put("Heating Upgrade Costs", costs);
+
+
+        double totalWattHours = 0;
+        int totalPower = 0;
+        double BTUPerHr = 0.0;
+        double heatTransferRateAprSep = 0.0;
+        double heatTransferRateOctMar = 0.0;
+        double heatLossPerYear = 0.0;
+        double hoursHeatersRun = 0.0;
+        double extCrossSectionalArea = (floorCount * floorHeight * extLength) + (floorCount * floorHeight * extWidth) - windowSqft;
+        String currentKey;
+
+        for(int i = 0; i < heating.size(); i++){
+            currentKey = heating.keySet().toArray()[i].toString();
+            totalPower += heating.get(currentKey);
+        }
+
+        heatTransferRateAprSep += extCrossSectionalArea * (T_OUT_T_IN_APR_SEP / optimizedWallRValue);
+        heatTransferRateAprSep += windowSqft * (T_OUT_T_IN_APR_SEP / optimizedWindowRValue);
+        heatTransferRateAprSep += atticArea * (T_OUT_T_IN_APR_SEP / optimizedAtticRValue);
+        heatTransferRateAprSep *= (DAYS_IN_USE / 2) * 24;
+
+        heatTransferRateOctMar += extCrossSectionalArea * (T_OUT_T_IN_OCT_MAR / optimizedWallRValue);
+        heatTransferRateOctMar += windowSqft * (T_OUT_T_IN_OCT_MAR / optimizedWindowRValue);
+        heatTransferRateOctMar += atticArea * (T_OUT_T_IN_OCT_MAR / optimizedAtticRValue);
+        heatTransferRateOctMar *= (DAYS_IN_USE / 2) * 24;
+
+        heatLossPerYear = heatTransferRateAprSep + heatTransferRateOctMar;
+
+        BTUPerHr = totalPower * WATT_TO_BTU_PER_HR;
+
+        hoursHeatersRun = (heatLossPerYear / BTUPerHr);
+
+        totalWattHours = hoursHeatersRun * totalPower;
+
+        return (totalWattHours / 1000) * COST_PER_KILOWATT_HOUR;
+    }
+
+    public static double miscellaneousCosts() {
+        double costs = 0.0;
+        boolean read = false;
+
+        File upgradesData = new File("src/upgrades_file.txt");
+        Scanner upgradesScanner;
+
+        try {
+            upgradesScanner = new Scanner(upgradesData);
+            while(upgradesScanner.hasNext()){
+                String inputStr = upgradesScanner.nextLine();
+
+                if(inputStr.isBlank()) { read = false; }
+
+                if(read) {
+                    String[] dataSplit = inputStr.split(", ");
+                    costs += Double.parseDouble(dataSplit[1]);
+                    upgrades.add(dataSplit[0]);
+                }
+
+                if(inputStr.equals("Miscellaneous Updates:")) {
+                    read = true;
+                    upgradesScanner.nextLine();
+                }
+            }
+        } catch (FileNotFoundException e) {
+            JOptionPane.showMessageDialog(null, "Error loading upgrades_file.txt, exiting program.");
+            System.exit(-1);
+        }
+
+        upgradeCosts.put("Miscellaneous Upgrade Costs", costs);
+        return costs;
+    }
 
     public GUI() {
         nextButton.addActionListener(new ActionListener() {
@@ -75,8 +326,8 @@ public class GUI {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    float temp = Float.parseFloat(extHeightTextField.getText());
-                    extHeight = Math.round(temp);
+                    float temp = Float.parseFloat(extLengthTextField.getText());
+                    extLength = Math.round(temp);
                     temp = Float.parseFloat(extWidthTextField.getText());
                     extWidth = Math.round(temp);
                     temp = Float.parseFloat(floorCountTextField.getText());
@@ -171,8 +422,33 @@ public class GUI {
                     return;
                 }
 
+                windowSqft = (windowSqin / 144);
                 screen3.setVisible(false);
                 screen4.setVisible(true);
+            }
+        });
+        calculateCosts.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                double totalEnergyBill = baseLightingCost() + baseHeatingCost() + miscellaneousCosts();
+                lightingCostResult.setText(String.format("$%.2f per year", baseLightingCost()));
+                heatingCostResult.setText(String.format("$%.2f per year", baseHeatingCost()));
+                miscellaneousCostResult.setText(String.format("$%.2f per year", miscellaneousCosts()));
+                totalCostResult.setText(String.format("$%.2f per year", totalEnergyBill));
+
+                totalEnergyBill = optimizedLightingCost() + optimizedHeatingCost() + miscellaneousCosts();
+                optimizedLightingCostResult.setText(String.format("$%.2f per year", optimizedLightingCost()));
+                optimizedHeatingCostResult.setText(String.format("$%.2f per year", optimizedHeatingCost()));
+                optimizedMiscellaneousCostResult.setText(String.format("$%.2f per year", miscellaneousCosts()));
+                totalOptimizedCostResult.setText(String.format("$%.2f per year", totalEnergyBill));
+
+                double totalUpgradeCost = upgradeCosts.get("Miscellaneous Upgrade Costs") +
+                        upgradeCosts.get("Heating Upgrade Costs") + upgradeCosts.get("Lighting Upgrade Costs");
+                completeUpgradeCostResult.setText(String.format("$%.2f", totalUpgradeCost));
+
+                upgradeDescriptionsAndCosts.setText(upgradeCosts.toString());
+
+                JOptionPane.showMessageDialog(null, "Recommended upgrades: " + upgrades);
             }
         });
     }
@@ -181,10 +457,12 @@ public class GUI {
         heating = new HashMap<String, Integer>();
         lightingTypes = new HashMap<Integer, Integer>();
         lightingHours = new HashMap<Integer, Integer>();
+        upgradeCosts = new HashMap<String, Double>();
+        upgrades = new ArrayList<String>();
 
         lightingSlidePosition = 0;
 
-        extHeight = -1;
+        extLength = -1;
         extWidth = -1;
         floorHeight = -1;
         floorCount = -1;
@@ -223,7 +501,7 @@ public class GUI {
             }
         }
 
-        JFrame myFrame = new JFrame("Mental Health Resources Simulation");
+        JFrame myFrame = new JFrame("Smart Home Energy Calculator");
         myFrame.setContentPane(new GUI().mainPanel);
 
         // sets up what happens when the frame is closed
