@@ -15,7 +15,7 @@ public class GUI {
     private JButton nextButton;
     private JButton nextTo3Button;
     private JPanel screen3;
-    private JButton startAt1Button;
+    private JButton nextTo4Button;
     private JButton addRoomButton;
     private JTextArea rooms;
     private JPanel screen0;
@@ -24,6 +24,11 @@ public class GUI {
     private JTextArea bulbInfo;
     private JButton resetButtonScreen1;
     private JTextField lightingHourTextField;
+    private JTextField extWidthTextField;
+    private JTextArea screen3MessageBox;
+    private JTextField extHeightTextField;
+    private JTextField floorHeightTextField;
+    private JTextField floorCountTextField;
 
     private static HashMap<String, Integer> heating;
     private static HashMap<Integer, Integer> lightingTypes;
@@ -31,12 +36,19 @@ public class GUI {
 
     private static int lightingSlidePosition;
 
+    private static int extHeight;
+    private static int extWidth;
+    private static int floorHeight;
+    private static int floorCount;
+
     public GUI() {
         nextButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 screen1.setVisible(false);
                 screen2.setVisible(true);
+
+                nextTo3Button.setEnabled(false);
 
                 int currentKey = (int) lightingTypes.keySet().toArray()[lightingSlidePosition];
                 bulbInfo.setText("Out of 24 hours, how often do you use the " + currentKey + "W bulbs (on average)? You have "
@@ -46,17 +58,29 @@ public class GUI {
         nextTo3Button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                screen1.setVisible(false);
                 screen2.setVisible(false);
                 screen3.setVisible(true);
             }
         });
-        startAt1Button.addActionListener(new ActionListener() {
+        nextTo4Button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                screen1.setVisible(true);
-                screen2.setVisible(false);
+                try {
+                    float temp = Float.parseFloat(extHeightTextField.getText());
+                    extHeight = Math.round(temp);
+                    temp = Float.parseFloat(extWidthTextField.getText());
+                    extWidth = Math.round(temp);
+                    temp = Float.parseFloat(floorCountTextField.getText());
+                    floorCount = Math.round(temp);
+                    temp = Float.parseFloat(floorHeightTextField.getText());
+                    floorHeight = Math.round(temp);
+                } catch (Exception ex1) {
+                    screen3MessageBox.setText("Please make sure all values are in numeric form (ex. 18)");
+                    return;
+                }
+
                 screen3.setVisible(false);
+                //screen4.setVisible(false);
             }
         });
         startHomeEnergyCalculatorButton.addActionListener(new ActionListener() {
@@ -85,10 +109,21 @@ public class GUI {
                     try {
                         float temp = Float.parseFloat(hourValueStr);
                         hourValue = Math.round(temp);
+
+                        if (hourValue < 0 || hourValue > 24) {
+                            String currentInfo = bulbInfo.getText();
+                            String[] currentInfoSplit = currentInfo.split("\n");
+                            String newText = currentInfoSplit[0];
+                            newText += "\n\n Please ensure the data is between 0 and 24 hours (ex. 18)";
+                            bulbInfo.setText(newText);
+                            return;
+                        }
                     } catch (Exception ex1) {
                         String currentInfo = bulbInfo.getText();
-                        currentInfo += "\n\n Please enter a number for the hours (ex. 18)";
-                        bulbInfo.setText(currentInfo);
+                        String[] currentInfoSplit = currentInfo.split("\n");
+                        String newText = currentInfoSplit[0];
+                        newText += "\n\n Please enter a number for the hours (ex. 18)";
+                        bulbInfo.setText(newText);
                         return;
                     }
 
@@ -102,6 +137,7 @@ public class GUI {
                     } else {
                         bulbInfo.setText("Data has been inputted for all of the lightbulbs in your home. Please continue to the next page");
                         confirmButton.setEnabled(false);
+                        nextTo3Button.setEnabled(true);
                         lightingHourTextField.setVisible(false);
                         confirmButton.setVisible(false);
                     }
@@ -116,6 +152,11 @@ public class GUI {
         lightingHours = new HashMap<Integer, Integer>();
 
         lightingSlidePosition = 0;
+
+        extHeight = -1;
+        extWidth = -1;
+        floorHeight = -1;
+        floorCount = -1;
 
         File sensorData = new File("src/dataFromSensors.txt");
         Scanner dataScanner;
