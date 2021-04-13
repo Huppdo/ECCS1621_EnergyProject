@@ -29,6 +29,12 @@ public class GUI {
     private JTextField extHeightTextField;
     private JTextField floorHeightTextField;
     private JTextField floorCountTextField;
+    private JPanel screen4;
+    private JTextArea screen4MessageBox;
+    private JTextField windowWidthField;
+    private JTextField windowHeightField;
+    private JTextField windowCountField;
+    private JButton nextTo5Button;
 
     private static HashMap<String, Integer> heating;
     private static HashMap<Integer, Integer> lightingTypes;
@@ -40,6 +46,9 @@ public class GUI {
     private static int extWidth;
     private static int floorHeight;
     private static int floorCount;
+
+    private static int windowSqin;
+    private static int windowCount;
 
     public GUI() {
         nextButton.addActionListener(new ActionListener() {
@@ -80,7 +89,7 @@ public class GUI {
                 }
 
                 screen3.setVisible(false);
-                //screen4.setVisible(false);
+                screen4.setVisible(true);
             }
         });
         startHomeEnergyCalculatorButton.addActionListener(new ActionListener() {
@@ -144,6 +153,28 @@ public class GUI {
                 }
             }
         });
+        nextTo5Button.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    float countTemp = Float.parseFloat(windowCountField.getText());
+                    int count = Math.round(countTemp);
+                    windowCount += count;
+                    float heightTemp = Float.parseFloat(windowHeightField.getText());
+                    int heightInInches = Math.round(heightTemp);
+                    float widthTemp = Float.parseFloat(windowWidthField.getText());
+                    int widthInInches = Math.round(widthTemp);
+
+                    windowSqin += (count * heightInInches * widthInInches);
+                } catch (Exception ex1) {
+                    screen4MessageBox.setText("Please make sure all values are in numeric form (ex. 18)");
+                    return;
+                }
+
+                screen3.setVisible(false);
+                screen4.setVisible(true);
+            }
+        });
     }
 
     public static void main(String[] args) {
@@ -157,6 +188,9 @@ public class GUI {
         extWidth = -1;
         floorHeight = -1;
         floorCount = -1;
+
+        windowCount = 0;
+        windowSqin = 0;
 
         File sensorData = new File("src/dataFromSensors.txt");
         Scanner dataScanner;
