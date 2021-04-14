@@ -501,27 +501,10 @@ public class GUI {
         nextTo5Button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                try {
-                    // initialize/set variables
-                    float countTemp = Float.parseFloat(windowCountField.getText());
-                    int count = Math.round(countTemp);
-                    windowCount += count;
-                    float heightTemp = Float.parseFloat(windowHeightField.getText());
-                    int heightInInches = Math.round(heightTemp);
-                    float widthTemp = Float.parseFloat(windowWidthField.getText());
-                    int widthInInches = Math.round(widthTemp);
-
-                    windowSqin += (count * heightInInches * widthInInches);
-                } catch (Exception ex1) {
-                    // check that all fields are valid
-                    screen4MessageBox.setText("Please make sure all values are in numeric form (ex. 18)");
-                    return;
-                }
-
                 // set sq. ft of window and move to screen4
                 windowSqft = (windowSqin / 144);
-                screen3.setVisible(false);
-                screen4.setVisible(true);
+                screen4.setVisible(false);
+                screen5.setVisible(true);
             }
         });
         calculateCosts.addActionListener(new ActionListener() {
@@ -551,6 +534,34 @@ public class GUI {
                 upgradeDescriptionsAndCosts.setText(upgradeCosts.toString());
 
                 JOptionPane.showMessageDialog(null, "Recommended upgrades: " + upgrades);
+            }
+        });
+        addAnotherWindow.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    // initialize/set variables
+                    float countTemp = Float.parseFloat(windowCountField.getText());
+                    int count = Math.round(countTemp);
+                    windowCount += count;
+
+                    float heightTemp = Float.parseFloat(windowHeightField.getText());
+                    int heightInInches = Math.round(heightTemp);
+                    float widthTemp = Float.parseFloat(windowWidthField.getText());
+                    int widthInInches = Math.round(widthTemp);
+
+                    windowSqin += (count * heightInInches * widthInInches);
+
+                    screen4MessageBox.setText("Current Window Count:" + windowCount + "\nCurrent Square Inches: " + windowSqin);
+                } catch (Exception ex1) {
+                    // check that all fields are valid
+                    screen4MessageBox.setText("Please make sure all values are in numeric form (ex. 18)");
+                    return;
+                }
+
+                windowWidthField.setText("");
+                windowHeightField.setText("");
+                windowCountField.setText("");
             }
         });
     }
