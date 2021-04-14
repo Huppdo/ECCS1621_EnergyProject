@@ -2,9 +2,9 @@ Room, Power Usage (W) from Baseboard
 Living Room, 2000
 Dining Room, 1500
 Kitchen, 2000
-Bedroom large, 2000
-Bedroom medium2, 1700
-Bedroom small, 1600
+Bedroom Large, 2000
+Bedroom Medium, 1700
+Bedroom Small, 1600
 Bathroom, 1000
 
 Bulb (W), Number

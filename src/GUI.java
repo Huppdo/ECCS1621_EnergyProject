@@ -96,6 +96,9 @@ public class GUI {
 
     // arrayList to hold strings of upgrades entered
     private static ArrayList<String> upgrades;
+    private static boolean heatingUpgradeAdded;
+    private static boolean ledUpgradeAdded;
+    private static boolean miscUpgradeAdded;
 
     /**
      * calculates the cost of lighting in Uncle Roger's house
@@ -147,7 +150,10 @@ public class GUI {
                     String[] dataSplit = inputStr.split(", ");
                     totalWattHours += lightingHours.get(Integer.parseInt(dataSplit[0])) * lightingTypes.get(Integer.parseInt(dataSplit[0])) * Integer.parseInt(dataSplit[1]);
                     costs += Double.parseDouble(dataSplit[2]) * lightingTypes.get(Integer.parseInt(dataSplit[0]));
-                    upgrades.add("Upgrade to all LED bulbs");
+                    if (!ledUpgradeAdded) {
+                        upgrades.add("Upgrade to all LED bulbs");
+                        ledUpgradeAdded = true;
+                    }
                 }
 
                 if(inputStr.equals("Potential Lightbulb Upgrades:")) {
@@ -270,7 +276,9 @@ public class GUI {
                         costs += Double.parseDouble(dataSplit[2]);
                     }
                     // add first split to upgrades arrayList
-                    upgrades.add(dataSplit[0]);
+                    if (!heatingUpgradeAdded) {
+                        upgrades.add(dataSplit[0]);
+                    }
                 }
 
                 if(inputStr.equals("Potential Insulation Upgrades:")) {
@@ -278,6 +286,7 @@ public class GUI {
                     upgradesScanner.nextLine();
                 }
             }
+            heatingUpgradeAdded = true;
             // show error if file not found and exit program
         } catch (FileNotFoundException e) {
             JOptionPane.showMessageDialog(null, "Error loading upgrades_file.txt, exiting program.");
@@ -357,7 +366,9 @@ public class GUI {
                     // upgrades arrayList
                     String[] dataSplit = inputStr.split(", ");
                     costs += Double.parseDouble(dataSplit[1]);
-                    upgrades.add(dataSplit[0]);
+                    if (!miscUpgradeAdded) {
+                        upgrades.add(dataSplit[0]);
+                    }
                 }
 
                 if(inputStr.equals("Miscellaneous Updates:")) {
@@ -365,6 +376,8 @@ public class GUI {
                     upgradesScanner.nextLine();
                 }
             }
+
+            miscUpgradeAdded = true;
             // show error if file not found and exit program
         } catch (FileNotFoundException e) {
             JOptionPane.showMessageDialog(null, "Error loading upgrades_file.txt, exiting program.");
@@ -435,6 +448,7 @@ public class GUI {
                 StringBuilder roomstr = new StringBuilder();
 
                 for (String str : heating.keySet()) {
+                    roomstr.append("- ");
                     roomstr.append(str);
                     roomstr.append('\n');
                 }
@@ -531,9 +545,30 @@ public class GUI {
                         upgradeCosts.get("Heating Upgrade Costs") + upgradeCosts.get("Lighting Upgrade Costs");
                 completeUpgradeCostResult.setText(String.format("$%.2f", totalUpgradeCost));
 
-                upgradeDescriptionsAndCosts.setText(upgradeCosts.toString());
+                StringBuilder upgradeCostStr = new StringBuilder();
 
-                JOptionPane.showMessageDialog(null, "Recommended upgrades: " + upgrades);
+                for (String str : upgradeCosts.keySet()) {
+                    upgradeCostStr.append("- ");
+                    upgradeCostStr.append(str);
+                    upgradeCostStr.append(": $");
+
+                    double currentCost = upgradeCosts.get(str);
+                    upgradeCostStr.append(String.format("%.2f", currentCost));
+
+                    upgradeCostStr.append('\n');
+                }
+
+                upgradeDescriptionsAndCosts.setText(upgradeCostStr.toString());
+
+                StringBuilder upgradeListString = new StringBuilder();
+
+                for (String str : upgrades) {
+                    upgradeListString.append("- ");
+                    upgradeListString.append(str);
+                    upgradeListString.append('\n');
+                }
+
+                JOptionPane.showMessageDialog(null, "Recommended upgrades: \n" + upgradeListString.toString());
             }
         });
         addAnotherWindow.addActionListener(new ActionListener() {
@@ -552,7 +587,7 @@ public class GUI {
 
                     windowSqin += (count * heightInInches * widthInInches);
 
-                    screen4MessageBox.setText("Current Window Count:" + windowCount + "\nCurrent Square Inches: " + windowSqin);
+                    screen4MessageBox.setText("Current Window Count: " + windowCount + "\nCurrent Square Inches: " + windowSqin);
                 } catch (Exception ex1) {
                     // check that all fields are valid
                     screen4MessageBox.setText("Please make sure all values are in numeric form (ex. 18)");
